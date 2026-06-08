@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Armadilhas da Mente</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#07071a; --surface:#0f0f26; --surface2:#181832;
+  --accent:#6d28d9; --accent2:#a78bfa;
+  --gold:#f59e0b; --gold2:#fcd34d;
+  --green:#10b981; --red:#ef4444;
+  --text:#f0eeff; --muted:#7070a0;
+  --border:rgba(109,40,217,.22);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);}
+
+.blob{position:fixed;border-radius:50%;filter:blur(90px);opacity:.12;pointer-events:none;z-index:0;}
+.b1{width:500px;height:500px;background:var(--accent);top:-180px;left:-120px;}
+.b2{width:400px;height:400px;background:var(--gold);bottom:-120px;right:-100px;}
+
+.screen{
+  position:fixed;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:10;transition:opacity .45s,transform .45s;padding:24px;
+}
+.screen.off{opacity:0;pointer-events:none;transform:scale(.97);}
+
+/* ══ TITLE ══ */
+#s-title{gap:22px;text-align:center;}
+.brain-pulse{
+  font-size:76px;
+  animation:pulse 3s ease-in-out infinite;
+  filter:drop-shadow(0 0 28px rgba(109,40,217,.7));
+}
+@keyframes pulse{
+  0%,100%{transform:scale(1);filter:drop-shadow(0 0 20px rgba(109,40,217,.4));}
+  50%{transform:scale(1.1);filter:drop-shadow(0 0 50px rgba(109,40,217,.9));}
+}
+.badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(109,40,217,.15);border:1px solid rgba(109,40,217,.3);
+  border-radius:100px;padding:7px 20px;
+  font-size:12px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--accent2);font-weight:600;
+}
+.title-big{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(58px,10vw,128px);
+  line-height:.92;letter-spacing:2px;
+  background:linear-gradient(140deg,#fff 0%,var(--accent2) 55%,var(--gold2) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.title-sub{color:var(--muted);font-size:17px;max-width:460px;line-height:1.7;}
+.pills{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+.pill{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:100px;padding:7px 18px;
+  font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;
+}
+.pill b{color:var(--accent2);}
+.btn-start{
+  background:linear-gradient(135deg,var(--accent),#7c3aed);
+  border:none;color:#fff;font-family:'DM Sans',sans-serif;
+  font-size:18px;font-weight:700;padding:18px 64px;
+  border-radius:100px;cursor:pointer;
+  box-shadow:0 0 40px rgba(109,40,217,.45);
+  transition:all .3s;letter-spacing:.5px;
+}
+.btn-start:hover{transform:translateY(-3px);box-shadow:0 0 65px rgba(109,40,217,.7);}
+
+/* ══ GAME ══ */
+#s-game{justify-content:flex-start;gap:0;padding:0;}
+.game-wrap{
+  width:100%;height:100%;
+  display:grid;
+  grid-template-columns:1fr 196px;
+  grid-template-rows:auto 1fr auto;
+}
+
+.top-bar{
+  grid-column:1/-1;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 26px;
+  border-bottom:1px solid var(--border);
+  background:rgba(7,7,26,.85);backdrop-filter:blur(12px);
+  z-index:20;
+}
+.game-logo{font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:2px;color:var(--accent2);}
+.dots{display:flex;gap:8px;align-items:center;}
+.dot{
+  width:10px;height:10px;border-radius:50%;
+  background:var(--surface2);border:1px solid var(--border);
+  transition:all .4s;
+}
+.dot.done{background:var(--green);border-color:var(--green);}
+.dot.active{background:var(--accent);border-color:var(--accent);box-shadow:0 0 12px var(--accent);transform:scale(1.35);}
+.timer{
+  font-family:'DM Mono',monospace;font-size:25px;font-weight:500;
+  color:var(--text);min-width:78px;text-align:right;transition:color .3s;
+}
+.timer.warn{color:var(--gold);animation:tblink .5s ease-in-out infinite;}
+.timer.urgent{color:var(--red);}
+@keyframes tblink{0%,100%{opacity:1}50%{opacity:.3}}
+
+.main-content{
+  grid-column:1;grid-row:2;
+  padding:24px 30px 16px 30px;
+  overflow-y:auto;
+  display:flex;flex-direction:column;gap:18px;
+}
+.main-content::-webkit-scrollbar{width:4px;}
+.main-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+.q-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.q-num{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.q-badge{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:4px 14px;border-radius:100px;border:1px solid;color:var(--accent2);border-color:var(--accent2);background:rgba(109,40,217,.1);}
+
+.q-text{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(30px,4.5vw,60px);
+  line-height:1.05;letter-spacing:.5px;color:var(--text);
+}
+.opts{display:grid;gap:11px;grid-template-columns:repeat(3,1fr);}
+.opt{
+  background:var(--surface);border:2px solid var(--border);
+  border-radius:14px;padding:16px 22px;
+  display:flex;align-items:center;gap:14px;transition:all .35s;
+}
+.opt-letter{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--muted);min-width:24px;transition:color .3s;}
+.opt-text{font-size:15px;font-weight:500;line-height:1.4;color:var(--text);}
+.opt.correct{background:rgba(16,185,129,.12);border-color:var(--green);box-shadow:0 0 26px rgba(16,185,129,.2);transform:scale(1.02);}
+.opt.correct .opt-letter{color:var(--green);}
+.opt.wrong{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.22);}
+.opt.wrong .opt-letter{color:rgba(239,68,68,.4);}
+.opt.wrong .opt-text{color:var(--muted);}
+
+.reveal-panel{
+  background:var(--surface2);border:2px solid var(--border);
+  border-radius:16px;padding:22px 26px;
+  display:none;flex-direction:column;gap:7px;
+  animation:slideUp .5s cubic-bezier(.16,1,.3,1);
+}
+.reveal-panel.show{display:flex;}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.rv-tag{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;color:var(--accent2);text-transform:uppercase;}
+.rv-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.5px;color:var(--text);}
+.rv-body{font-size:14px;color:var(--muted);line-height:1.75;}
+.rv-slide{font-size:11px;color:rgba(109,40,217,.55);font-style:italic;margin-top:3px;font-family:'DM Mono',monospace;}
+
+.bottom-bar{
+  grid-column:1;grid-row:3;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 30px;border-top:1px solid var(--border);
+  background:rgba(7,7,26,.85);backdrop-filter:blur(12px);
+  gap:12px;flex-wrap:wrap;
+}
+.btn-ghost{
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);font-family:'DM Sans',sans-serif;
+  font-size:14px;font-weight:600;padding:11px 28px;
+  border-radius:100px;cursor:pointer;transition:all .25s;
+}
+.btn-ghost:hover{border-color:var(--accent2);color:var(--accent2);}
+.btn-reveal{
+  background:linear-gradient(135deg,var(--gold),#d97706);
+  border:none;color:#000;font-family:'DM Sans',sans-serif;
+  font-size:15px;font-weight:800;padding:13px 36px;
+  border-radius:100px;cursor:pointer;
+  box-shadow:0 0 28px rgba(245,158,11,.35);transition:all .3s;
+}
+.btn-reveal:hover{transform:translateY(-2px);box-shadow:0 0 48px rgba(245,158,11,.55);}
+.btn-next{
+  background:linear-gradient(135deg,var(--green),#059669);
+  border:none;color:#fff;font-family:'DM Sans',sans-serif;
+  font-size:15px;font-weight:800;padding:13px 36px;
+  border-radius:100px;cursor:pointer;
+  box-shadow:0 0 26px rgba(16,185,129,.35);transition:all .3s;display:none;
+}
+.btn-next:hover{transform:translateY(-2px);box-shadow:0 0 48px rgba(16,185,129,.55);}
+
+.scoreboard{
+  grid-column:2;grid-row:2/4;
+  border-left:1px solid var(--border);
+  background:rgba(7,7,26,.6);backdrop-filter:blur(12px);
+  padding:18px 12px;
+  display:flex;flex-direction:column;gap:8px;
+  overflow-y:auto;
+}
+.scoreboard::-webkit-scrollbar{width:3px;}
+.scoreboard::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+.sc-title{
+  font-family:'Bebas Neue',sans-serif;font-size:13px;
+  letter-spacing:2px;color:var(--muted);
+  text-align:center;text-transform:uppercase;
+  padding-bottom:10px;border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.sc-row{display:flex;align-items:center;justify-content:space-between;gap:4px;padding:3px 0;}
+.sc-name{font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;}
+.sc-btns{display:flex;gap:3px;flex-shrink:0;}
+.sc-btn{
+  background:none;border:1px solid var(--border);color:var(--muted);
+  width:19px;height:19px;border-radius:50%;cursor:pointer;
+  font-size:13px;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;line-height:1;flex-shrink:0;
+}
+.sc-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+.sc-btn.minus:hover{background:var(--red);border-color:var(--red);}
+.sc-val{font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--accent2);min-width:18px;text-align:right;flex-shrink:0;}
+
+.flash-overlay{position:fixed;inset:0;background:rgba(239,68,68,.1);pointer-events:none;z-index:100;opacity:0;transition:opacity .08s;}
+.flash-overlay.on{opacity:1;}
+
+/* ══ FINAL ══ */
+#s-final{overflow-y:auto;}
+.final-inner{
+  display:flex;flex-direction:column;align-items:center;
+  gap:18px;padding:24px;width:100%;max-width:520px;
+}
+.trophy-anim{
+  font-size:72px;
+  animation:bounce 1s ease-in-out infinite alternate;
+  filter:drop-shadow(0 0 36px gold);flex-shrink:0;
+}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-12px)}}
+.final-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(44px,8vw,96px);
+  background:linear-gradient(135deg,gold,#f59e0b);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1;
+}
+.final-sub{color:var(--muted);font-size:15px;}
+.winners{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:18px;padding:20px 32px;
+  width:100%;display:flex;flex-direction:column;gap:12px;
+}
+.w-row{display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:16px;font-weight:600;}
+.w-row:nth-child(1){color:gold;font-size:20px;}
+.w-row:nth-child(2){color:#d1d5db;}
+.w-row:nth-child(3){color:#cd7f32;}
+.w-pos{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--muted);}
+.w-score{font-family:'DM Mono',monospace;color:var(--accent2);}
+
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:200;}
+
+@media(max-width:700px){
+  .game-wrap{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;}
+  .top-bar{grid-column:1;}
+  .scoreboard{display:none;}
+  .opts{grid-template-columns:1fr;}
+  .main-content{padding:18px;}
+  .bottom-bar{padding:12px 18px;}
+}
+</style>
+</head>
+<body>
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+<div class="flash-overlay" id="flashOverlay"></div>
+<canvas id="confetti"></canvas>
+
+<!-- TITLE -->
+<div class="screen" id="s-title">
+  <div class="brain-pulse">🧠</div>
+  <div class="badge">⚡ Dinâmica Interativa · Psicologia · Pensamento</div>
+  <div class="title-big">Armadilhas<br>da Mente</div>
+  <div class="title-sub">Descubra como o pensamento intuitivo pode te enganar — em tempo real.</div>
+  <div class="pills">
+    <div class="pill"><b>6</b> rodadas</div>
+    <div class="pill"><b>12</b> grupos</div>
+    <div class="pill">Vieses Cognitivos</div>
+  </div>
+  <button class="btn-start" onclick="startGame()">▶ Começar o Jogo</button>
+</div>
+
+<!-- GAME -->
+<div class="screen off" id="s-game">
+  <div class="game-wrap">
+    <div class="top-bar">
+      <div class="game-logo">Armadilhas da Mente 🧠</div>
+      <div class="dots" id="dots"></div>
+      <div class="timer" id="timer">⏱ 30</div>
+    </div>
+    <div class="main-content">
+      <div class="q-meta">
+        <div class="q-num" id="qNum">Rodada 1 de 6</div>
+        <div class="q-badge" id="qBadge">A / B / C</div>
+      </div>
+      <div class="q-text" id="qText"></div>
+      <div class="opts" id="opts"></div>
+      <div class="reveal-panel" id="revealPanel">
+        <div class="rv-tag" id="rvTag"></div>
+        <div class="rv-title" id="rvTitle"></div>
+        <div class="rv-body" id="rvBody"></div>
+        <div class="rv-slide" id="rvSlide"></div>
+      </div>
+    </div>
+    <div class="bottom-bar">
+      <button class="btn-ghost" onclick="goTitle()">← Início</button>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="btn-reveal" id="btnReveal" onclick="reveal()">⚡ Revelar Resposta</button>
+        <button class="btn-next" id="btnNext" onclick="next()">Próxima →</button>
+      </div>
+    </div>
+    <div class="scoreboard">
+      <div class="sc-title">Placar</div>
+      <div id="scRows"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FINAL -->
+<div class="screen off" id="s-final">
+  <div class="final-inner">
+    <div class="trophy-anim">🏆</div>
+    <div class="final-title">Fim de Jogo!</div>
+    <div class="final-sub">Veja quem caiu em menos armadilhas:</div>
+    <div class="winners" id="winners"></div>
+    <button class="btn-start" onclick="startGame()">🔄 Jogar Novamente</button>
+  </div>
+</div>
+
+<script>
+const Qs = [
+  {
+    tag:'Pensamento Intuitivo · Sistema 1 de Kahneman',
+    q:'Um taco e uma bola custam R$1,10. O taco custa R$1,00 a mais que a bola. Quanto custa a bola?',
+    opts:['R$ 0,10','R$ 0,05','R$ 0,50'],
+    correct:1,
+    rvTitle:'Seu cérebro tomou um atalho!',
+    rvBody:'A resposta intuitiva é R$0,10 — mas está errada. A certa é R$0,05. O Pensamento Intuitivo é rápido e automático, e prefere a resposta fácil à correta.',
+    rvSlide:'→ Slide 17: "O pensamento intuitivo é rápido, automático e pouco consciente."'
+  },
+  {
+    tag:'Atenção Automática',
+    q:'Você escolhe a fila menor no mercado — mas ela demora mais. Por quê?',
+    opts:['Puro azar','Pessoas compram mais itens','Fatores invisíveis: pagamento, problemas no caixa'],
+    correct:2,
+    rvTitle:'O cérebro foca só no que é visível!',
+    rvBody:'A atenção automática enxerga o tamanho da fila, mas ignora fatores ocultos. O Pensamento Intuitivo seleciona os estímulos mais óbvios e toma a decisão antes de analisar o contexto completo.',
+    rvSlide:'→ Slide 18: "O Pensamento Crítico está atento às falhas no raciocínio e às conclusões prematuras."'
+  },
+  {
+    tag:'Efeito Ancoragem',
+    q:'Sem calcular — em 5 segundos: quanto é 1×2×3×4×5×6×7×8?',
+    opts:['Menos de 1.000','Entre 1.000 e 10.000','Mais de 10.000'],
+    correct:2,
+    rvTitle:'O primeiro número ancorou tudo!',
+    rvBody:'O resultado é 40.320. Como a sequência começa pequena (1, 2, 3...), o cérebro ancora na primeira impressão e subestima muito. O ponto de partida distorce o julgamento final.',
+    rvSlide:'→ Slide 19: "Erros e vieses comuns e sistemáticos têm sido identificados por estudos de psicologia."'
+  },
+  {
+    tag:'Aversão à Perda · Kahneman & Tversky',
+    q:'Você pagou caro por um ingresso, mas o evento está ruim. O que fazer?',
+    opts:['Ficar — não posso perder o dinheiro','Ir embora — meu tempo vale mais','Depende do evento'],
+    correct:1,
+    rvTitle:'O dinheiro já foi — ficar só aumenta a perda!',
+    rvBody:'A Aversão à Perda faz a gente evitar "sentir prejuízo", mesmo que isso leve a decisões ruins. O dinheiro do ingresso já foi gasto — continuar no evento ruim não o devolve. Isso se chama Custo Irrecuperável.',
+    rvSlide:'→ Slide 17: "O pensamento intuitivo é baseado na experiência e dá a sensação de resposta imediata."'
+  },
+  {
+    tag:'Efeito Halo',
+    q:'Você vê um médico bem vestido e organizado. O que acontece automaticamente?',
+    opts:['Confia mais no diagnóstico dele','Avalia com cuidado antes de confiar','Não faz diferença a aparência'],
+    correct:0,
+    rvTitle:'A aparência contaminou o julgamento!',
+    rvBody:'O Efeito Halo faz uma característica positiva (aparência cuidada) influenciar o julgamento sobre outras qualidades sem relação com ela, como competência. O Pensamento Intuitivo classifica rapidamente — antes do Pensamento Crítico entrar em ação.',
+    rvSlide:'→ Slide 18: "O Pensamento Crítico avalia para formar um julgamento, atento às tendências pré-fixadas."'
+  },
+  {
+    tag:'Viés da Disponibilidade',
+    q:'O que mata mais brasileiros por ano?',
+    opts:['Ataques de tubarão 🦈','Picadas de abelha 🐝','São equivalentes'],
+    correct:1,
+    rvTitle:'Abelhas matam muito mais — mas tubarões dão mais medo!',
+    rvBody:'Abelhas e enxames matam dezenas de vezes mais pessoas por ano do que tubarões. Como ataques de tubarão aparecem em filmes e noticiários, o cérebro superestima esse risco. Quanto mais fácil é lembrar, mais ameaçador parece.',
+    rvSlide:'→ Slide 19: "Vários erros e vieses comuns e sistemáticos têm sido identificados por estudos de psicologia."'
+  }
+];
+
+let cur=0,tick,secs=30,done=false;
+const N=12;
+let scores=[];
+
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.add('off'));document.getElementById(id).classList.remove('off');}
+function goTitle(){clearInterval(tick);show('s-title');}
+
+function initScores(){scores=Array.from({length:N},(_,i)=>({name:`Grupo ${i+1}`,pts:0}));renderScores();}
+function renderScores(){
+  document.getElementById('scRows').innerHTML=scores.map((g,i)=>`
+    <div class="sc-row">
+      <div class="sc-name">${g.name}</div>
+      <div class="sc-btns">
+        <button class="sc-btn minus" onclick="pts(${i},-1)">−</button>
+        <button class="sc-btn" onclick="pts(${i},1)">+</button>
+      </div>
+      <div class="sc-val">${g.pts}</div>
+    </div>`).join('');
+}
+function pts(i,d){scores[i].pts=Math.max(0,scores[i].pts+d);renderScores();}
+
+function renderDots(){
+  document.getElementById('dots').innerHTML=Qs.map((_,i)=>`
+    <div class="dot${i<cur?' done':i===cur?' active':''}"></div>`).join('');
+}
+
+function startTimer(){
+  clearInterval(tick);secs=30;renderTimer();
+  tick=setInterval(()=>{secs--;renderTimer();if(secs<=0){clearInterval(tick);if(!done)reveal();}},1000);
+}
+function renderTimer(){
+  const el=document.getElementById('timer');
+  el.textContent=`⏱ ${secs}`;
+  el.className='timer'+(secs<=5?' urgent':secs<=10?' warn':'');
+}
+
+function load(){
+  done=false;
+  const q=Qs[cur];
+  document.getElementById('qNum').textContent=`Rodada ${cur+1} de ${Qs.length}`;
+  document.getElementById('qText').textContent=q.q;
+  const letters=['A','B','C'];
+  const grid=document.getElementById('opts');
+  grid.innerHTML=q.opts.map((o,i)=>`
+    <div class="opt" id="o${i}">
+      <div class="opt-letter">${letters[i]}</div>
+      <div class="opt-text">${o}</div>
+    </div>`).join('');
+  document.getElementById('revealPanel').className='reveal-panel';
+  document.getElementById('rvTag').textContent=q.tag;
+  document.getElementById('rvTitle').textContent=q.rvTitle;
+  document.getElementById('rvBody').textContent=q.rvBody;
+  document.getElementById('rvSlide').textContent=q.rvSlide;
+  document.getElementById('btnReveal').style.display='flex';
+  document.getElementById('btnNext').style.display='none';
+  renderDots();startTimer();
+}
+
+function reveal(){
+  if(done)return;done=true;clearInterval(tick);
+  const q=Qs[cur];
+  q.opts.forEach((_,i)=>document.getElementById(`o${i}`).classList.add(i===q.correct?'correct':'wrong'));
+  const f=document.getElementById('flashOverlay');f.classList.add('on');setTimeout(()=>f.classList.remove('on'),250);
+  document.getElementById('revealPanel').classList.add('show');
+  document.getElementById('btnReveal').style.display='none';
+  const bn=document.getElementById('btnNext');bn.style.display='flex';
+  bn.textContent=cur<Qs.length-1?'Próxima Rodada →':'🏆 Ver Resultado';
+}
+
+function next(){cur++;if(cur>=Qs.length)showFinal();else load();}
+
+function startGame(){cur=0;initScores();show('s-game');load();}
+
+function showFinal(){
+  clearInterval(tick);show('s-final');
+  const medals=['🥇','🥈','🥉','4°','5°'];
+  const sorted=[...scores].sort((a,b)=>b.pts-a.pts).slice(0,5);
+  document.getElementById('winners').innerHTML=sorted.map((g,i)=>`
+    <div class="w-row">
+      <div class="w-pos">${medals[i]}</div>
+      <div>${g.name}</div>
+      <div class="w-score">${g.pts} pts</div>
+    </div>`).join('');
+  confetti();
+}
+
+function confetti(){
+  const cv=document.getElementById('confetti'),cx=cv.getContext('2d');
+  cv.width=innerWidth;cv.height=innerHeight;
+  const cols=['#6d28d9','#a78bfa','#f59e0b','#10b981','#3b82f6','#ec4899'];
+  const ps=Array.from({length:150},()=>({
+    x:Math.random()*cv.width,y:Math.random()*cv.height-cv.height,
+    r:Math.random()*7+4,c:cols[~~(Math.random()*cols.length)],
+    s:Math.random()*3+2,a:0,as:Math.random()*.1+.05
+  }));
+  let f=0;
+  (function draw(){
+    cx.clearRect(0,0,cv.width,cv.height);
+    ps.forEach(p=>{
+      p.y+=p.s;p.a+=p.as;
+      const t=Math.sin(p.a)*11;
+      if(p.y>cv.height){p.y=-10;p.x=Math.random()*cv.width;}
+      cx.beginPath();cx.lineWidth=p.r;cx.strokeStyle=p.c;
+      cx.moveTo(p.x+t+p.r/2,p.y);cx.lineTo(p.x+t,p.y+t+p.r/2);cx.stroke();
+    });
+    if(++f<320)requestAnimationFrame(draw);
+    else cx.clearRect(0,0,cv.width,cv.height);
+  })();
+}
+
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('s-game').classList.contains('off'))return;
+  if(e.key===' '||e.key==='Enter'){e.preventDefault();if(!done)reveal();else next();}
+});
+</script>
+</body>
+</html>
